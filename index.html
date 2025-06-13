@@ -821,7 +821,39 @@
           }
         },
         didDrawPage: function(data) {
-          // Rodapé com numeração de páginas
+          // Adiciona os brasões no rodapé
+          const brasaoWidth = 30;
+          const brasaoHeight = 30;
+          const pageHeight = doc.internal.pageSize.height;
+          
+          // Brasão da Paróquia
+          const brasaoParoquiaX = marginLeft + 40;
+          const brasaoParoquiaY = pageHeight - 40;
+          
+          // Adiciona imagem do brasão (substitua pela URL correta)
+          doc.addImage('brasao_paroquia.png', 'PNG', brasaoParoquiaX, brasaoParoquiaY, brasaoWidth, brasaoHeight);
+          
+          // Texto abaixo do brasão (centralizado)
+          doc.setFontSize(10);
+          doc.text("Paróquia Nossa Senhora dos Remédios", 
+                  brasaoParoquiaX + brasaoWidth/2, 
+                  brasaoParoquiaY + brasaoHeight + 5, 
+                  { align: 'center' });
+          
+          // Brasão da Diocese
+          const brasaoDioceseX = marginLeft + 120;
+          const brasaoDioceseY = pageHeight - 40;
+          
+          // Adiciona imagem do brasão (substitua pela URL correta)
+          doc.addImage('brasao_diocese.png', 'PNG', brasaoDioceseX, brasaoDioceseY, brasaoWidth, brasaoHeight);
+          
+          // Texto abaixo do brasão (centralizado)
+          doc.text("Diocese de Petrolina", 
+                  brasaoDioceseX + brasaoWidth/2, 
+                  brasaoDioceseY + brasaoHeight + 5, 
+                  { align: 'center' });
+          
+          // Numeração de páginas
           const pageCount = doc.internal.getNumberOfPages();
           const str = "Página " + doc.internal.getCurrentPageInfo().pageNumber + " de " + pageCount;
           
@@ -830,14 +862,14 @@
           doc.text(
             str,
             data.settings.margin.left,
-            doc.internal.pageSize.height - 15
+            pageHeight - 10
           );
           
           // Data de geração
           doc.text(
             `Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`,
             210 - marginRight - doc.getTextWidth(`Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`) - 5,
-            doc.internal.pageSize.height - 15
+            pageHeight - 10
           );
         }
       });
