@@ -803,8 +803,8 @@ function gerarPDF() {
   const pageWidth = doc.internal.pageSize.getWidth();
   const centerX = pageWidth / 2;
   const brasaoY = doc.internal.pageSize.getHeight() - 80; // Aumentado espaço inferior
-  const brasaoWidth = 30; // Tamanho reduzido
-  const brasaoHeight = 30; // Tamanho reduzido
+  const brasaoWidth = 20; // Tamanho reduzido
+  const brasaoHeight = 20; // Tamanho reduzido
   const textOffset = 5; // Espaço entre imagem e texto
 
   // Função para adicionar brasões com tratamento de erro
@@ -855,13 +855,6 @@ function gerarPDF() {
       ["Diocese de", "Petrolina"] // Texto em 2 linhas
   );
 
-  // Data abaixo dos brasões
-  doc.setFontSize(8);
-  doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 
-      pageWidth / 2, 
-      brasaoY + brasaoHeight + 25, // Posicionado abaixo dos textos
-      { align: 'center' }
-  );
   // ========== FIM DO NOVO CÓDIGO DOS BRASÕES ==========
 
   const fileName = `Diario_Catequese_${ano}_${tipo.replace(/\s+/g, '_')}_${formatarData(data).replace(/\//g, '-')}.pdf`;
