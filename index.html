@@ -795,63 +795,74 @@ function gerarPDF() {
     }
   });
 
-  // ========== NOVO CÓDIGO PARA OS BRASÕES ==========
+  // ========== INÍCIO DO NOVO CÓDIGO DOS BRASÕES ==========
   const pageCount = doc.internal.getNumberOfPages();
   doc.setPage(pageCount);
-  
+
   // Configurações de posicionamento
   const pageWidth = doc.internal.pageSize.getWidth();
   const centerX = pageWidth / 2;
-  const brasaoY = doc.internal.pageSize.getHeight() - 60;
-  const brasaoWidth = 40;
-  const brasaoHeight = 40;
+  const brasaoY = doc.internal.pageSize.getHeight() - 80; // Aumentado espaço inferior
+  const brasaoWidth = 30; // Tamanho reduzido
+  const brasaoHeight = 30; // Tamanho reduzido
+  const textOffset = 5; // Espaço entre imagem e texto
 
-  // Função para tentar carregar imagem com fallback
-  function addImageWithFallback(doc, imgPath, x, y, w, h, fallbackText) {
-    try {
-      doc.addImage({
-        imageData: imgPath,
-        x: x,
-        y: y,
-        width: w,
-        height: h
-      });
-      return true;
-    } catch (e) {
-      console.error("Erro ao carregar imagem:", imgPath, e);
-      doc.setFontSize(10);
-      doc.text(fallbackText, x + w/2, y + h/2, { align: 'center' });
-      return false;
-    }
+  // Função para adicionar brasões com tratamento de erro
+  function addBrasao(doc, imgPath, x, y, w, h, texts) {
+      try {
+          doc.addImage({
+              imageData: imgPath,
+              x: x,
+              y: y,
+              width: w,
+              height: h
+          });
+          
+          // Adiciona textos em linhas separadas
+          doc.setFontSize(8);
+          texts.forEach((text, i) => {
+              doc.text(text, x + w/2, y + h + textOffset + (i * 4), { 
+                  align: 'center', 
+                  maxWidth: w + 20 
+              });
+          });
+      } catch (e) {
+          console.error("Erro ao carregar brasão:", imgPath, e);
+          doc.setFontSize(8);
+          doc.text("Brasão não carregado", x + w/2, y + h/2, { align: 'center' });
+      }
   }
 
   // Brasão da Paróquia (esquerda)
-  addImageWithFallback(
-    doc,
-    'brasao_paroquia.png',
-    centerX - 90,
-    brasaoY,
-    brasaoWidth,
-    brasaoHeight,
-    'Paróquia'
+  addBrasao(
+      doc,
+      'brasao_paroquia.png',
+      centerX - 80,
+      brasaoY,
+      brasaoWidth,
+      brasaoHeight,
+      ["Paróquia Nossa", "Senhora dos Remédios"] // Texto em 2 linhas
   );
-  doc.text("Paróquia Nossa Senhora", centerX - 90, brasaoY + brasaoHeight + 10, { align: 'center', maxWidth: brasaoWidth });
-  doc.text("dos Remédios", centerX - 90, brasaoY + brasaoHeight + 16, { align: 'center', maxWidth: brasaoWidth });
 
   // Brasão da Diocese (direita)
-  addImageWithFallback(
-    doc,
-    'brasao_diocese.png',
-    centerX + 50,
-    brasaoY,
-    brasaoWidth,
-    brasaoHeight,
-    'Diocese'
+  addBrasao(
+      doc,
+      'brasao_diocese.png',
+      centerX + 50,
+      brasaoY,
+      brasaoWidth,
+      brasaoHeight,
+      ["Diocese de", "Petrolina"] // Texto em 2 linhas
   );
-  doc.text("Diocese", centerX + 50, brasaoY + brasaoHeight + 10, { align: 'center', maxWidth: brasaoWidth });
-  doc.text("de Petrolina", centerX + 50, brasaoY + brasaoHeight + 16, { align: 'center', maxWidth: brasaoWidth });
 
-  // ========== FIM DO NOVO CÓDIGO ==========
+  // Data abaixo dos brasões
+  doc.setFontSize(8);
+  doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 
+      pageWidth / 2, 
+      brasaoY + brasaoHeight + 25, // Posicionado abaixo dos textos
+      { align: 'center' }
+  );
+  // ========== FIM DO NOVO CÓDIGO DOS BRASÕES ==========
 
   const fileName = `Diario_Catequese_${ano}_${tipo.replace(/\s+/g, '_')}_${formatarData(data).replace(/\//g, '-')}.pdf`;
   doc.save(fileName);
