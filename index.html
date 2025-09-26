@@ -653,126 +653,80 @@
       const rows = document.querySelectorAll("#frequencia tbody tr");
 
       const pageWidth = doc.internal.pageSize.getWidth();
-      let y = 25;
+      
+      // ========== CABEÇALHO PRINCIPAL - COM ESPAÇAMENTO CORRIGIDO ==========
+      let y = 20;
 
-      // ========== CABEÇALHO PRINCIPAL COM BRASÕES LATERAIS ==========
-      // Brasões posicionados ao lado do título (Opção A)
+      // Brasões laterais próximos ao título
       try {
-        // Brasão da Paróquia (esquerda) - mais próximo do centro
-        doc.addImage('brasao_paroquia.png', 'PNG', 55, 15, 16, 16);
+        doc.addImage('brasao_paroquia.png', 'PNG', 50, y, 16, 16);
         doc.setFontSize(7);
-        doc.text("Paróquia", 63, 34, { align: 'center' });
-        doc.text("N.S. Remédios", 63, 37, { align: 'center' });
-      } catch(e) {
-        console.log("Brasão da paróquia não carregado");
-      }
+        doc.text("Paróquia", 58, y + 19, { align: 'center' });
+        doc.text("N.S. Remédios", 58, y + 22, { align: 'center' });
+      } catch(e) {}
       
       try {
-        // Brasão da Diocese (direita) - mais próximo do centro
-        doc.addImage('brasao_diocese.png', 'PNG', pageWidth - 71, 15, 16, 16);
+        doc.addImage('brasao_diocese.png', 'PNG', pageWidth - 66, y, 16, 16);
         doc.setFontSize(7);
-        doc.text("Diocese de", pageWidth - 63, 34, { align: 'center' });
-        doc.text("Petrolina", pageWidth - 63, 37, { align: 'center' });
-      } catch(e) {
-        console.log("Brasão da diocese não carregado");
-      }
+        doc.text("Diocese de", pageWidth - 58, y + 19, { align: 'center' });
+        doc.text("Petrolina", pageWidth - 58, y + 22, { align: 'center' });
+      } catch(e) {}
 
-      // Título principal centralizado entre os brasões
+      // Título principal
       doc.setFontSize(16);
       doc.setFont(undefined, "bold");
-      doc.text("DIÁRIO DE CATEQUESE", pageWidth / 2, 25, { align: 'center' });
+      doc.text("DIÁRIO DE CATEQUESE", pageWidth / 2, y + 10, { align: 'center' });
       
-      // Subtítulo
+      // Subtítulo com ESPAÇAMENTO ADEQUADO
       doc.setFontSize(11);
       doc.setFont(undefined, "normal");
-      doc.text("Paróquia Nossa Senhora dos Remédios - Diocese de Petrolina", pageWidth / 2, 32, { align: 'center' });
+      doc.text("Paróquia Nossa Senhora dos Remédios - Diocese de Petrolina", pageWidth / 2, y + 17, { align: 'center' });
 
-      // Linha separadora
+      // Linha separadora com ESPAÇAMENTO CORRETO (+10mm do texto)
       doc.setDrawColor(0);
       doc.setLineWidth(0.5);
-      doc.line(20, 38, pageWidth - 20, 38);
+      doc.line(20, y + 25, pageWidth - 20, y + 25);
       
-      y = 48; // Posição inicial do conteúdo
+      y += 35; // ESPAÇAMENTO ADEQUADO após cabeçalho
 
-      // ========== INFORMAÇÕES BÁSICAS COM FORMATAÇÃO CORRIGIDA ==========
+      // ========== INFORMAÇÕES BÁSICAS - COM FORMATAÇÃO CORRIGIDA ==========
       doc.setFontSize(11);
       
-      // Ano - formatação corrigida
-      doc.setFont(undefined, "bold");
-      doc.text("Ano:", 20, y);
-      doc.setFont(undefined, "normal");
-      doc.text(ano, 45, y);
-      y += 6;
-
-      // Tipo de Catequese - FORMATAÇÃO CORRIGIDA (separado em duas linhas)
-      doc.setFont(undefined, "bold");
-      doc.text("Tipo de Catequese:", 20, y);
-      doc.setFont(undefined, "normal");
-      // Quebra de linha se o texto for muito longo
-      const tipoLines = doc.splitTextToSize(tipo, 60);
-      if (tipoLines.length > 1) {
-        doc.text(tipoLines[0], 45, y);
-        y += 4;
-        doc.text(tipoLines[1], 45, y);
-        y += 6;
-      } else {
-        doc.text(tipo, 45, y);
-        y += 6;
-      }
-
-      // Responsável - FORMATAÇÃO CORRIGIDA (espaço após ":")
-      doc.setFont(undefined, "bold");
-      doc.text("Responsável:", 20, y);
-      doc.setFont(undefined, "normal");
-      const responsavelLines = doc.splitTextToSize(responsavel, 60);
-      if (responsavelLines.length > 1) {
-        doc.text(responsavelLines[0], 45, y);
-        y += 4;
-        doc.text(responsavelLines[1], 45, y);
-        y += 6;
-      } else {
-        doc.text(responsavel, 45, y);
-        y += 6;
-      }
-
-      // Auxiliares (se houver)
-      if (auxiliares) {
+      // Função auxiliar para adicionar campos com formatação correta
+      function adicionarCampo(rotulo, valor, yPos) {
         doc.setFont(undefined, "bold");
-        doc.text("Auxiliares:", 20, y);
+        doc.text(rotulo, 20, yPos);
+        
         doc.setFont(undefined, "normal");
-        const auxiliaresLines = doc.splitTextToSize(auxiliares, 60);
-        auxiliaresLines.forEach((line, index) => {
-          doc.text(line, 45, y + (index * 4));
-        });
-        y += (auxiliaresLines.length * 4) + 2;
+        const valorLines = doc.splitTextToSize(valor || "-", 80); // Largura reduzida para evitar colisão
+        
+        if (valorLines.length > 1) {
+          // Múltiplas linhas - mais espaçamento
+          valorLines.forEach((line, index) => {
+            doc.text(line, 65, yPos + (index * 4.5));
+          });
+          return yPos + (valorLines.length * 4.5) + 3;
+        } else {
+          // Uma linha - espaçamento normal
+          doc.text(valorLines[0], 65, yPos);
+          return yPos + 6;
+        }
       }
 
-      // Data
-      doc.setFont(undefined, "bold");
-      doc.text("Data:", 20, y);
-      doc.setFont(undefined, "normal");
-      doc.text(formatarData(data), 45, y);
-      y += 6;
-
-      // Leitura
-      doc.setFont(undefined, "bold");
-      doc.text("Leitura do Dia:", 20, y);
-      doc.setFont(undefined, "normal");
-      const leituraLines = doc.splitTextToSize(leitura, 60);
-      leituraLines.forEach((line, index) => {
-        doc.text(line, 45, y + (index * 4));
-      });
-      y += (leituraLines.length * 4) + 2;
-
-      // Tema
-      doc.setFont(undefined, "bold");
-      doc.text("Tema da Aula:", 20, y);
-      doc.setFont(undefined, "normal");
-      const temaLines = doc.splitTextToSize(tema, 60);
-      temaLines.forEach((line, index) => {
-        doc.text(line, 45, y + (index * 4));
-      });
-      y += (temaLines.length * 4) + 8;
+      // Campos com ESPAÇAMENTO HORIZONTAL CORRETO (65mm em vez de 45mm)
+      y = adicionarCampo("Ano:", ano, y);
+      y = adicionarCampo("Tipo de Catequese:", tipo, y);
+      y = adicionarCampo("Responsável:", responsavel, y);
+      
+      if (auxiliares) {
+        y = adicionarCampo("Auxiliares:", auxiliares, y);
+      }
+      
+      y = adicionarCampo("Data:", formatarData(data), y);
+      y = adicionarCampo("Leitura do Dia:", leitura, y);
+      y = adicionarCampo("Tema da Aula:", tema, y);
+      
+      y += 8; // Espaço extra antes do conteúdo
 
       // ========== CONTEÚDO TRABALHADO ==========
       if (y > 200) {
@@ -796,7 +750,7 @@
         y += 5;
       });
       
-      y += 8;
+      y += 10;
 
       // ========== TABELA DE FREQUÊNCIA ==========
       if (y > 190) {
@@ -883,28 +837,28 @@
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
       
-      // Cabeçalho simplificado com brasões laterais
+      // Cabeçalho simplificado
       try {
-        doc.addImage('brasao_paroquia.png', 'PNG', 60, 12, 12, 12);
+        doc.addImage('brasao_paroquia.png', 'PNG', 50, 15, 12, 12);
       } catch(e) {}
       
       try {
-        doc.addImage('brasao_diocese.png', 'PNG', pageWidth - 72, 12, 12, 12);
+        doc.addImage('brasao_diocese.png', 'PNG', pageWidth - 62, 15, 12, 12);
       } catch(e) {}
       
       doc.setFontSize(12);
       doc.setFont(undefined, "bold");
-      doc.text("DIÁRIO DE CATEQUESE", pageWidth / 2, 18, { align: 'center' });
+      doc.text("DIÁRIO DE CATEQUESE", pageWidth / 2, 20, { align: 'center' });
       
       doc.setFontSize(9);
       doc.setFont(undefined, "normal");
-      doc.text(`Página ${pageNumber}`, pageWidth / 2, 24, { align: 'center' });
+      doc.text(`Página ${pageNumber}`, pageWidth / 2, 26, { align: 'center' });
       
       doc.setDrawColor(0);
       doc.setLineWidth(0.3);
-      doc.line(20, 28, pageWidth - 20, 28);
+      doc.line(20, 30, pageWidth - 20, 30);
       
-      return 35; // Posição Y para conteúdo
+      return 40; // Posição Y para conteúdo
     }
 
     function formatarData(dataString) {
