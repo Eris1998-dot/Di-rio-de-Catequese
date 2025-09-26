@@ -661,15 +661,15 @@
       try {
         doc.addImage('brasao_paroquia.png', 'PNG', 20, y, 16, 16);
         doc.setFontSize(7);
-        doc.text("Paróquia", 58, y + 19, { align: 'center' });
-        doc.text("N.S. Remédios", 58, y + 22, { align: 'center' });
+        doc.text("Paróquia", 38, y + 19, { align: 'center' });
+        doc.text("N.S. Remédios", 38, y + 22, { align: 'center' });
       } catch(e) {}
       
       try {
-        doc.addImage('brasao_diocese.png', 'PNG', pageWidth - 86, y, 16, 16);
+        doc.addImage('brasao_diocese.png', 'PNG', pageWidth - 46, y, 16, 16);
         doc.setFontSize(7);
-        doc.text("Diocese de", pageWidth - 58, y + 19, { align: 'center' });
-        doc.text("Petrolina", pageWidth - 58, y + 22, { align: 'center' });
+        doc.text("Diocese de", pageWidth - 38, y + 19, { align: 'center' });
+        doc.text("Petrolina", pageWidth - 38, y + 22, { align: 'center' });
       } catch(e) {}
 
       // Título principal
@@ -893,4 +893,5 @@
   </script>
 </body>
 </html>
+
 
