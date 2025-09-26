@@ -633,239 +633,272 @@
       return true;
     }
 
-function gerarPDF() {
-  if (!validarFormularioEncontro()) {
-    showToast("Preencha os campos obrigatórios antes de gerar o PDF!", "error");
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-
-  const ano = document.getElementById("ano").value;
-  const tipo = document.getElementById("tipo").value;
-  const responsavel = document.getElementById("responsavel").value;
-  const auxiliares = document.getElementById("auxiliares").value;
-  const leitura = document.getElementById("leitura").value;
-  const tema = document.getElementById("tema").value;
-  const data = document.getElementById("data").value;
-  const conteudo = document.getElementById("conteudo").value;
-  const rows = document.querySelectorAll("#frequencia tbody tr");
-
-  const marginLeft = 15;
-  const marginRight = 15;
-  let y = 20;
-
-  // Cabeçalho
-  doc.setFontSize(14);
-  doc.setFont(undefined, "bold");
-  doc.text("Diário de Catequese", marginLeft, y);
-  y += 7;
-  
-  doc.setFontSize(12);
-  doc.text("Paróquia Nossa Senhora dos Remédios - Diocese de Petrolina", marginLeft, y);
-  y += 10;
-
-  doc.setDrawColor(0);
-  doc.setLineWidth(0.5);
-  doc.line(marginLeft, y, 210 - marginRight, y);
-  y += 10;
-
-  // Informações básicas
-  doc.setFontSize(11);
-  doc.setFont(undefined, "bold");
-  doc.text("Ano:", marginLeft, y);
-  doc.setFont(undefined, "normal");
-  doc.text(ano, marginLeft + 40, y);
-  y += 7;
-
-  doc.setFont(undefined, "bold");
-  doc.text("Tipo de Catequese:", marginLeft, y);
-  doc.setFont(undefined, "normal");
-  doc.text(tipo, marginLeft + 40, y);
-  y += 7;
-
-  doc.setFont(undefined, "bold");
-  doc.text("Responsável:", marginLeft, y);
-  doc.setFont(undefined, "normal");
-  doc.text(responsavel, marginLeft + 40, y);
-  y += 7;
-
-  if (auxiliares) {
-    doc.setFont(undefined, "bold");
-    doc.text("Auxiliares:", marginLeft, y);
-    doc.setFont(undefined, "normal");
-    doc.text(auxiliares, marginLeft + 40, y);
-    y += 7;
-  }
-
-  doc.setFont(undefined, "bold");
-  doc.text("Data:", marginLeft, y);
-  doc.setFont(undefined, "normal");
-  doc.text(formatarData(data), marginLeft + 40, y);
-  y += 7;
-
-  doc.setFont(undefined, "bold");
-  doc.text("Leitura do Dia:", marginLeft, y);
-  doc.setFont(undefined, "normal");
-  doc.text(leitura, marginLeft + 40, y);
-  y += 7;
-
-  doc.setFont(undefined, "bold");
-  doc.text("Tema da Aula:", marginLeft, y);
-  doc.setFont(undefined, "normal");
-  doc.text(tema, marginLeft + 40, y);
-  y += 10;
-
-  // Conteúdo trabalhado
-  doc.setFont(undefined, "bold");
-  doc.text("Conteúdo Trabalhado:", marginLeft, y);
-  y += 7;
-  
-  doc.setFont(undefined, "normal");
-  const conteudoLines = doc.splitTextToSize(conteudo, 180);
-  conteudoLines.forEach(line => {
-    doc.text(line, marginLeft, y);
-    y += 7;
-  });
-  y += 10;
-
-  // Tabela de frequência
-  doc.setFont(undefined, "bold");
-  doc.text("Frequência dos Alunos:", marginLeft, y);
-  y += 7;
-
-  const tableData = [];
-  rows.forEach((row, index) => {
-    const nome = row.cells[1].innerText;
-    const presente = row.cells[2].querySelector(".presenca").checked;
-    const justificativa = row.cells[3].querySelector(".justificativa").value;
-    const observacao = row.cells[4].querySelector(".observacoes").value;
-
-    tableData.push({
-      numero: index + 1,
-      nome: nome,
-      presenca: presente ? "Presente" : "Faltou",
-      justificativa: justificativa || "-",
-      observacao: observacao || "-",
-      fillColor: presente ? [200, 255, 200] : [255, 200, 200]
-    });
-  });
-
-  doc.autoTable({
-    startY: y,
-    head: [["Nº", "Nome", "Presença", "Justificativa", "Observações"]],
-    body: tableData.map(item => [
-      item.numero,
-      item.nome,
-      { content: item.presenca, styles: { fillColor: item.fillColor } },
-      item.justificativa,
-      item.observacao
-    ]),
-    margin: { left: marginLeft, right: marginRight },
-    headStyles: {
-      fillColor: [100, 100, 100],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold'
-    },
-    alternateRowStyles: {
-      fillColor: [245, 245, 245]
-    },
-    columnStyles: {
-      0: { cellWidth: 10 },
-      1: { cellWidth: 'auto' },
-      2: { cellWidth: 20 },
-      3: { cellWidth: 'auto' },
-      4: { cellWidth: 'auto' }
-    },
-    styles: {
-      fontSize: 9,
-      cellPadding: 3,
-      overflow: 'linebreak'
-    },
-    didDrawPage: function (data) {
-      // Footer
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text(
-        `Gerado em ${new Date().toLocaleDateString()}`,
-        data.settings.margin.left,
-        doc.internal.pageSize.height - 10
-      );
-    }
-  });
-
-  // ========== INÍCIO DO NOVO CÓDIGO DOS BRASÕES ==========
-  const pageCount = doc.internal.getNumberOfPages();
-  doc.setPage(pageCount);
-
-  // Configurações de posicionamento
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const centerX = pageWidth / 2;
-  const brasaoY = doc.internal.pageSize.getHeight() - 80; // Aumentado espaço inferior
-  const brasaoWidth = 20; // Tamanho reduzido
-  const brasaoHeight = 20; // Tamanho reduzido
-  const textOffset = 5; // Espaço entre imagem e texto
-
-  // Função para adicionar brasões com tratamento de erro
-  function addBrasao(doc, imgPath, x, y, w, h, texts) {
-      try {
-          doc.addImage({
-              imageData: imgPath,
-              x: x,
-              y: y,
-              width: w,
-              height: h
-          });
-          
-          // Adiciona textos em linhas separadas
-          doc.setFontSize(8);
-          texts.forEach((text, i) => {
-              doc.text(text, x + w/2, y + h + textOffset + (i * 4), { 
-                  align: 'center', 
-                  maxWidth: w + 20 
-              });
-          });
-      } catch (e) {
-          console.error("Erro ao carregar brasão:", imgPath, e);
-          doc.setFontSize(8);
-          doc.text("Brasão não carregado", x + w/2, y + h/2, { align: 'center' });
+    function gerarPDF() {
+      if (!validarFormularioEncontro()) {
+        showToast("Preencha os campos obrigatórios antes de gerar o PDF!", "error");
+        return;
       }
-  }
 
-  // Brasão da Paróquia (esquerda)
-  addBrasao(
-      doc,
-      'brasao_paroquia.png',
-      centerX - 40,
-      brasaoY,
-      brasaoWidth,
-      brasaoHeight,
-      ["Paróquia Nossa", "Senhora dos Remédios"] // Texto em 2 linhas
-  );
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-  // Brasão da Diocese (direita)
-  addBrasao(
-      doc,
-      'brasao_diocese.png',
-      centerX + 10,
-      brasaoY,
-      brasaoWidth,
-      brasaoHeight,
-      ["Diocese de", "Petrolina"] // Texto em 2 linhas
-  );
+      const ano = document.getElementById("ano").value;
+      const tipo = document.getElementById("tipo").value;
+      const responsavel = document.getElementById("responsavel").value;
+      const auxiliares = document.getElementById("auxiliares").value;
+      const leitura = document.getElementById("leitura").value;
+      const tema = document.getElementById("tema").value;
+      const data = document.getElementById("data").value;
+      const conteudo = document.getElementById("conteudo").value;
+      const rows = document.querySelectorAll("#frequencia tbody tr");
 
-  // ========== FIM DO NOVO CÓDIGO DOS BRASÕES ==========
+      const marginLeft = 15;
+      const marginRight = 15;
+      let y = 40; // Aumentado para dar espaço ao cabeçalho
 
-  const fileName = `Diario_Catequese_${ano}_${tipo.replace(/\s+/g, '_')}_${formatarData(data).replace(/\//g, '-')}.pdf`;
-  doc.save(fileName);
-  showToast("PDF gerado com sucesso!", "success");
-}
+      // ========== CABEÇALHO COM BRASÕES ==========
+      // Brasão da Paróquia (esquerda)
+      try {
+        doc.addImage('brasao_paroquia.png', 'PNG', 20, 15, 15, 15);
+        doc.setFontSize(7);
+        doc.text("Paróquia Nossa", 27.5, 33, { align: 'center' });
+        doc.text("Senhora dos Remédios", 27.5, 36, { align: 'center' });
+      } catch(e) {
+        console.log("Brasão da paróquia não carregado");
+      }
+
+      // Brasão da Diocese (direita)
+      try {
+        doc.addImage('brasao_diocese.png', 'PNG', 175, 15, 15, 15);
+        doc.setFontSize(7);
+        doc.text("Diocese de", 182.5, 33, { align: 'center' });
+        doc.text("Petrolina", 182.5, 36, { align: 'center' });
+      } catch(e) {
+        console.log("Brasão da diocese não carregado");
+      }
+
+      // Título centralizado
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text("Diário de Catequese", 105, 25, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+      doc.text("Paróquia Nossa Senhora dos Remédios - Diocese de Petrolina", 105, 32, { align: 'center' });
+
+      // Linha separadora
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.line(marginLeft, y-5, 210 - marginRight, y-5);
+      
+      // ========== INFORMAÇÕES BÁSICAS ==========
+      doc.setFontSize(11);
+      doc.setFont(undefined, "bold");
+      doc.text("Ano:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(ano, marginLeft + 40, y);
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Tipo de Catequese:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(tipo, marginLeft + 40, y);
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Responsável:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(responsavel, marginLeft + 40, y);
+      y += 7;
+
+      if (auxiliares) {
+        doc.setFont(undefined, "bold");
+        doc.text("Auxiliares:", marginLeft, y);
+        doc.setFont(undefined, "normal");
+        doc.text(auxiliares, marginLeft + 40, y);
+        y += 7;
+      }
+
+      doc.setFont(undefined, "bold");
+      doc.text("Data:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(formatarData(data), marginLeft + 40, y);
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Leitura do Dia:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(leitura, marginLeft + 40, y);
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Tema da Aula:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(tema, marginLeft + 40, y);
+      y += 10;
+
+      // ========== CONTEÚDO TRABALHADO ==========
+      doc.setFont(undefined, "bold");
+      doc.text("Conteúdo Trabalhado:", marginLeft, y);
+      y += 7;
+      
+      doc.setFont(undefined, "normal");
+      const conteudoLines = doc.splitTextToSize(conteudo, 180);
+      conteudoLines.forEach(line => {
+        if (y > 270) { // Verifica se precisa de nova página
+          doc.addPage();
+          y = 20;
+          adicionarCabecalhoRodape(doc, true); // Adiciona cabeçalho/rodapé na nova página
+        }
+        doc.text(line, marginLeft, y);
+        y += 7;
+      });
+      y += 10;
+
+      // ========== TABELA DE FREQUÊNCIA ==========
+      doc.setFont(undefined, "bold");
+      doc.text("Frequência dos Alunos:", marginLeft, y);
+      y += 7;
+
+      const tableData = [];
+      rows.forEach((row, index) => {
+        const nome = row.cells[1].innerText;
+        const presente = row.cells[2].querySelector(".presenca").checked;
+        const justificativa = row.cells[3].querySelector(".justificativa").value;
+        const observacao = row.cells[4].querySelector(".observacoes").value;
+
+        tableData.push({
+          numero: index + 1,
+          nome: nome,
+          presenca: presente ? "Presente" : "Faltou",
+          justificativa: justificativa || "-",
+          observacao: observacao || "-",
+          fillColor: presente ? [200, 255, 200] : [255, 200, 200]
+        });
+      });
+
+      // Configuração da tabela com cabeçalho/rodapé em todas as páginas
+      doc.autoTable({
+        startY: y,
+        head: [["Nº", "Nome", "Presença", "Justificativa", "Observações"]],
+        body: tableData.map(item => [
+          item.numero,
+          item.nome,
+          { content: item.presenca, styles: { fillColor: item.fillColor } },
+          item.justificativa,
+          item.observacao
+        ]),
+        margin: { left: marginLeft, right: marginRight },
+        headStyles: {
+          fillColor: [100, 100, 100],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 'auto' },
+          4: { cellWidth: 'auto' }
+        },
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+          overflow: 'linebreak'
+        },
+        didDrawPage: function (data) {
+          // Adiciona cabeçalho e rodapé em todas as páginas
+          adicionarCabecalhoRodape(doc, data.pageNumber > 1);
+          
+          // Data de geração apenas na última página
+          if (data.pageNumber === doc.internal.getNumberOfPages()) {
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(
+              `Gerado em ${new Date().toLocaleDateString()}`,
+              data.settings.margin.left,
+              doc.internal.pageSize.height - 10
+            );
+          }
+        }
+      });
+
+      const fileName = `Diario_Catequese_${ano}_${tipo.replace(/\s+/g, '_')}_${formatarData(data).replace(/\//g, '-')}.pdf`;
+      doc.save(fileName);
+      showToast("PDF gerado com sucesso!", "success");
+    }
+
+    // Função para adicionar cabeçalho e rodapé em todas as páginas
+    function adicionarCabecalhoRodape(doc, paginaSecundaria = false) {
+      const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+      const isPrimeiraPagina = pageNumber === 1;
+      
+      // ========== CABEÇALHO ==========
+      if (isPrimeiraPagina) {
+        // Cabeçalho completo apenas na primeira página
+        try {
+          doc.addImage('brasao_paroquia.png', 'PNG', 20, 15, 15, 15);
+          doc.setFontSize(7);
+          doc.text("Paróquia Nossa", 27.5, 33, { align: 'center' });
+          doc.text("Senhora dos Remédios", 27.5, 36, { align: 'center' });
+        } catch(e) {}
+        
+        try {
+          doc.addImage('brasao_diocese.png', 'PNG', 175, 15, 15, 15);
+          doc.setFontSize(7);
+          doc.text("Diocese de", 182.5, 33, { align: 'center' });
+          doc.text("Petrolina", 182.5, 36, { align: 'center' });
+        } catch(e) {}
+        
+        doc.setFontSize(16);
+        doc.setFont(undefined, "bold");
+        doc.text("Diário de Catequese", 105, 25, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.setFont(undefined, "normal");
+        doc.text("Paróquia Nossa Senhora dos Remédios - Diocese de Petrolina", 105, 32, { align: 'center' });
+      } else {
+        // Cabeçalho simplificado nas demais páginas
+        try {
+          doc.addImage('brasao_paroquia.png', 'PNG', 20, 10, 10, 10);
+        } catch(e) {}
+        
+        try {
+          doc.addImage('brasao_diocese.png', 'PNG', 180, 10, 10, 10);
+        } catch(e) {}
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, "bold");
+        doc.text(`Diário de Catequese - Página ${pageNumber}`, 105, 15, { align: 'center' });
+      }
+      
+      // Linha separadora do cabeçalho
+      const linhaY = isPrimeiraPagina ? 40 : 20;
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.3);
+      doc.line(15, linhaY, 195, linhaY);
+    }
 
     function formatarData(dataString) {
       if (!dataString) return "";
       const data = new Date(dataString);
       return data.toLocaleDateString('pt-BR');
+    }
+
+    function limparFormularioEncontro() {
+      document.getElementById("ano").value = "";
+      document.getElementById("tipo").value = "";
+      document.getElementById("responsavel").value = "";
+      document.getElementById("auxiliares").value = "";
+      document.getElementById("leitura").value = "";
+      document.getElementById("tema").value = "";
+      document.getElementById("data").value = "";
+      document.getElementById("conteudo").value = "";
+      document.querySelector("#frequencia tbody").innerHTML = "";
+      document.getElementById("searchInput").value = "";
     }
 
     function showToast(message, type) {
